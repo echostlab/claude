@@ -132,7 +132,6 @@ jobs:
               if has_flag "variant"; then RAW_VARIANT="$(extract_flag "variant")"; require_non_empty_flag_value "variant" "$RAW_VARIANT"; SELECTED_VARIANT="$(validate_variant "$RAW_VARIANT")"; fi
               if has_flag "share"; then RAW_SHARE="$(extract_flag "share")"; require_non_empty_flag_value "share" "$RAW_SHARE"; SELECTED_SHARE="$(validate_share "$RAW_SHARE")"; fi
 
-              # Determina si el comentario se hizo dentro de un PR o en un Issue regular
               if [[ "$HAS_PR" == "true" ]]; then 
                 SHOULD_RUN="true"
                 RUN_KIND="manual_pr_review"
@@ -197,7 +196,10 @@ jobs:
           
       - name: Install repo dependencies (optional)
         if: steps.check.outputs.should_run == 'true' && hashFiles('package.json') != ''
-        run: sudo npm install -g --no-audit --no-fund 
+        run: |
+          # Enlaza bun de forma global para que el usuario root pueda acceder a él durante la instalación
+          sudo ln -sf $(which bun) /usr/local/bin/bun
+          sudo npm install -g --no-audit --no-fund 
 
       - name: Compose OpenCode prompt
         if: steps.check.outputs.should_run == 'true'
@@ -214,15 +216,12 @@ jobs:
           set -euo pipefail
 
           TITLE="${PR_TITLE:-$ISSUE_TITLE}"
-          # Recoge el cuerpo (body) original ya sea de un PR o de un Issue
           BODY="${PR_BODY:-$ISSUE_BODY}"
           FINAL_PROMPT=""
 
           if [[ "$EVENT_NAME" == "issue_comment" || "$EVENT_NAME" == "pull_request_review_comment" ]]; then
-            # Si es un comentario, incluye el título, el cuerpo original y el comentario
             FINAL_PROMPT="Title: ${TITLE}\n\nBody:\n${BODY}\n\nComment:\n${COMMENT_BODY}"
           else
-            # Si se acaba de abrir el Issue/PR, incluye solo el título y el cuerpo
             FINAL_PROMPT="Title: ${TITLE}\n\nBody:\n${BODY}"
           fi
 
@@ -286,4 +285,4 @@ jobs:
               issue_number: issueNumber,
               body,
             });
-
+            
