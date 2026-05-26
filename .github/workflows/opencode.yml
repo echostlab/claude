@@ -44,7 +44,7 @@ jobs:
           resolve_model() {
             local input="${1:-gpt-5.4}"
             case "$input" in
-              gpt-5.3-codex) echo "azure-foundry/gpt-5.4" ;;
+              gpt-5.4) echo "azure-foundry/gpt-5.4" ;;
               azure-foundry/*) echo "$input" ;;
               *) echo "azure-foundry/gpt-5.4" ;;
             esac
