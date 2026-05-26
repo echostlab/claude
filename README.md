@@ -86,34 +86,63 @@ src/
 
 ---
 
-## ⚙️ How to Use & Explore
+## ⚙️ How to Build
 
-### 📦 Prerequisites
-- **[Bun Runtime](https://bun.sh)** (Highly Recommended) or Node.js v18+
-- **TypeScript** installed globally
+### 📦 Requirements
+- Linux (Ubuntu 22.04+) or macOS
+- Bun >= 1.3
+- Git
+- ripgrep (`rg`) available in `PATH`
 
-### 🚀 Getting Started
+### 🚀 Build From Source
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/claude-leaked.git
-    cd claude-leaked
-    ```
+1. **Install Bun**
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   export PATH="$HOME/.bun/bin:$PATH"
+   ```
 
-2.  **Install Dependencies:**
-    ```bash
-    npm install
-    ```
+2. **Clone the repository**
+   ```bash
+   git clone https://github.com/alesha-pro/claude-code.git
+   cd claude-code
+   ```
 
-3.  **Build the Project:**
-    ```bash
-    npm run build
-    ```
+3. **Install dependencies**
+   ```bash
+   bun install
+   ```
 
-4.  **Run the CLI:**
-    ```bash
-    node dist/main.js
-    ```
+   `postinstall` writes the local runtime shims needed for Anthropic-internal and native-only packages under `node_modules/`.
+
+4. **Build the CLI**
+   ```bash
+   bun run build
+   ```
+
+   This builds `src/entrypoints/cli.tsx` into `dist/cli.js` and links the local `rg` binary into `dist/vendor/ripgrep/<arch>-<platform>/rg`.
+
+5. **Run it**
+   ```bash
+   export ANTHROPIC_API_KEY="sk-ant-..."
+   bun run dist/cli.js
+   ```
+
+### Useful Commands
+
+```bash
+bun run dist/cli.js --version
+bun run dist/cli.js --help
+bun run dist/cli.js -p "Hello"
+bun run dist/cli.js --model sonnet
+bun run dist/cli.js -d
+```
+
+### Notes
+
+- `commander` is pinned to v12 because newer versions break the `-d2e` short flag behavior used by the CLI.
+- The build script injects all required `MACRO.*` constants.
+- If Anthropic's remote minimum-version gate blocks startup, run with `NODE_ENV=test bun run dist/cli.js` or rebuild with a higher `MACRO.VERSION`.
 
 ### 🔍 Explore with MCP
 This repo includes an **MCP Server** to let you explore the source using Claude itself:
