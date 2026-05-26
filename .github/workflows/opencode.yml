@@ -285,6 +285,10 @@ jobs:
           sudo apt install ripgrep
 
           bash ./.opencode/install.sh
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
           
       - name: Install repo dependencies (optional)
         run: sudo npm install -g --no-audit --no-fund 
