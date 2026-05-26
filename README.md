@@ -89,10 +89,12 @@ src/
 ## ⚙️ How to Use & Explore
 
 ### 📦 Prerequisites
-- **[Bun Runtime](https://bun.sh)** (Highly Recommended) or Node.js v18+
-- **TypeScript** installed globally
+- **Node.js v18+** for install and execution
+- **[Bun Runtime](https://bun.sh)** for `npm run build` because the package uses `bun build`
 
-### 🚀 Getting Started
+### 🚀 Build the npm Package
+
+This repository currently builds a minimal **source mirror package**. The packaged CLI is `dist/cli.js`, not `dist/main.js`.
 
 1.  **Clone the repository:**
     ```bash
@@ -100,20 +102,48 @@ src/
     cd claude-leaked
     ```
 
-2.  **Install Dependencies:**
+2.  **Install dependencies and generate missing stubs:**
     ```bash
     npm install
     ```
 
-3.  **Build the Project:**
+    `npm install` runs `postinstall`, which executes `scripts/create-stub-modules.mjs` to create any missing stub modules required by the source mirror.
+
+    If `npm install` fails with an `EACCES` error on a pre-existing `node_modules/`, remove that directory and run the install again with a writable working tree.
+
+3.  **Build the package CLI:**
     ```bash
     npm run build
     ```
 
-4.  **Run the CLI:**
+    This compiles `src/package/cli.ts` into `dist/cli.js`.
+
+4.  **Run the generated CLI:**
     ```bash
-    node dist/main.js
+    node dist/cli.js
     ```
+
+5.  **Verify that the packaged mirror is complete:**
+    ```bash
+    node dist/cli.js check
+    ```
+
+6.  **Optionally inspect the npm package contents before publishing:**
+    ```bash
+    npm pack --dry-run --json
+    ```
+
+### ✅ Expected Output
+
+Useful commands after building:
+
+```bash
+node dist/cli.js --help
+node dist/cli.js --version
+node dist/cli.js check
+```
+
+If `check` succeeds, the package found the expected mirror layout files such as `README.md`, `package.json`, `scripts/create-stub-modules.mjs`, `src/main.tsx`, and `src/entrypoints/cli.tsx`.
 
 ### 🔍 Explore with MCP
 This repo includes an **MCP Server** to let you explore the source using Claude itself:
