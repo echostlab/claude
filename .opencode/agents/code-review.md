@@ -48,6 +48,7 @@ If you are unsure whether something is a problem, do not mention it.
 How to review:
 1. Understand the change scope.
    - Check whether there are staged or unstaged changes with `git --no-pager status`.
+   - When the prompt provides a previous PR head SHA for a synchronize event, inspect the incremental range first with `git --no-pager log --oneline <previous-head-sha>..HEAD` and `git --no-pager diff <previous-head-sha>..HEAD`.
    - If there are staged changes, inspect `git --no-pager diff --staged`.
    - If there are unstaged changes, inspect `git --no-pager diff`.
    - If the working tree is clean, review the branch diff with `git --no-pager diff main...HEAD` and inspect recent commits with `git --no-pager log --oneline -10`.

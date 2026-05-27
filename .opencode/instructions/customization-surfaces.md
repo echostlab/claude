@@ -124,6 +124,10 @@ This workspace keeps custom commands in `.opencode/commands/*.md`, which OpenCod
 - The workflow should explicitly point `OPENCODE_CONFIG` at the root `opencode.json` when reproducibility matters.
 - The `.opencode/` directory must remain checked out so OpenCode can discover agents, commands, skills, and referenced instruction markdown.
 - Non-interactive review workflows must deny `question` and rely on direct `allow` permissions for the tools they need.
+- Keep a dedicated implementation agent under `.opencode/agents/` for unattended issue and `/oc` implementation runs instead of relying on the built-in `build` agent when deterministic automation behavior matters.
+- Prefer a canonical issue branch naming rule such as `automation/issue-<number>-<slug>` so issue-open and issue-comment runs converge on the same working branch.
+- When `/oc` targets a PR, the implementation route should work on the checked-out PR head branch, commit there when write access exists, and let the follow-up `pull_request` synchronize event review the newly pushed commits.
+- When a PR comes from a fork without write access, prompts and agent rules should require a clear limitation message plus a concrete patch or next step instead of stalling.
 
 ## Authoring rules for this repository
 

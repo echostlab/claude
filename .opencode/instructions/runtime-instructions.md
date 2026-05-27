@@ -42,9 +42,13 @@ Project-local OpenCode assets under `.opencode/`:
 - The GitHub Actions workflow must load the repository-root `opencode.json`.
 - The workflow must also use the checked-in `.opencode/` agents, commands, skills, and instructions.
 - Automation is non-interactive: never block waiting for clarification from a human during CI execution.
-- Opened issues and `/oc` issue comments should route to implementation work.
+- Opened issues and `/oc` issue comments should route to the dedicated `implementer` agent.
+- Issue implementation must create or update a dedicated non-default branch, commit the resulting changes there, and open or update a pull request back to the default branch when code changes are required.
+- Automation-created PRs must include a concrete PR description with summary, validation, and linked issue context.
 - Opened or updated PRs should route to code review.
-- `/oc` comments on PR threads or review comments should route to implementation work on the PR branch when possible.
+- PR synchronize reviews should focus first on the newly pushed commits or incremental diff before expanding to the full PR context.
+- `/oc` comments on PR threads or review comments should route to implementation work on the PR branch when possible, commit the resulting changes on that branch, and rely on the follow-up PR review run to review the new commits.
+- If the PR branch belongs to a fork and write access is unavailable, explain the limitation clearly and provide a concrete patch or next step instead of blocking.
 - Prefer concise, high-confidence review comments over speculative feedback.
 
 ## Editing rule

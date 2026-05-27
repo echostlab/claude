@@ -26,6 +26,7 @@ Hard rules:
 Review workflow:
 1. Identify the change scope with git.
    - Inspect `git --no-pager status`.
+   - When the prompt provides a previous PR head SHA for a synchronize event, inspect the incremental range first with `git --no-pager log --oneline <previous-head-sha>..HEAD` and `git --no-pager diff <previous-head-sha>..HEAD`.
    - In CI or detached-head checkouts, prefer `git --no-pager diff origin/<base-branch>...HEAD` when the prompt provides the PR base branch. Do not assume a local `main` branch exists.
    - Otherwise review the relevant diff (`git --no-pager diff --staged`, `git --no-pager diff`, `git --no-pager diff origin/main...HEAD`, or `git --no-pager diff main...HEAD` depending on the checkout state).
    - Use `git --no-pager log --oneline -10` when recent commit context helps.

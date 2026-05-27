@@ -19,6 +19,7 @@ Active project-local OpenCode assets under `.opencode/`:
 - Default model: `azure-foundry/gpt-5.4`
 - Default agent: `build`
 - Built-in `build`, `plan`, `general`, `explore`, and `scout` are all pinned to `azure-foundry/gpt-5.4`
+- The dedicated automation agents `implementer` and `reviewer` are pinned to `azure-foundry/gpt-5.4`
 - Custom agents and commands are also pinned to `azure-foundry/gpt-5.4`
 - GitHub review automation must use the root `opencode.json` plus the `.opencode/` customization surfaces
 
@@ -48,9 +49,13 @@ Additional runtime instructions are loaded through `opencode.json.instructions`:
 ## Automation rules
 
 - GitHub Actions issue implementation runs and PR review runs are unattended. Do not ask the PR author, issue author, user, or client for clarification, approval, or permission.
-- Route opened issues and `/oc` issue comments to implementation work.
+- Route opened issues and `/oc` issue comments to the dedicated `implementer` agent.
+- Issue implementation must work from a dedicated non-default branch, commit the resulting changes there, and open or update a pull request back to the default branch when code changes are required.
+- Pull requests created from issue automation must include a concrete description with summary, validation, and linked issue context.
 - Route opened or updated PRs to code review.
-- Route `/oc` comments on PR threads or PR review comments to implementation work on the PR branch when possible.
+- On PR synchronize events, code review should focus first on the newly pushed commits or incremental diff before falling back to the full PR diff.
+- Route `/oc` comments on PR threads or PR review comments to implementation work on the PR branch when possible, and commit the resulting changes on that branch.
+- If a `/oc` implementation request targets a fork PR without write access to the branch, explain the limitation clearly and provide a concrete patch or next step instead of blocking.
 - Use direct `allow` permissions for the tools required by CI automation flows.
 - When ambiguity remains during automation, make the safest reasonable assumption, state it if needed, and continue.
 - Use high-signal review output only: bugs, regressions, security issues, broken assumptions, concrete missing coverage, or other material risks.

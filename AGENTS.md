@@ -23,9 +23,13 @@ Core defaults:
 Automation rule:
 - GitHub Actions issue implementation runs and PR review runs are non-interactive.
 - Agents, prompts, instructions, and workflow config must not ask the PR author, issue author, or user for clarification, approval, or permission during CI runs.
-- On opened issues and `/oc` comments on issues, the workflow should route to implementation work.
+- On opened issues and `/oc` comments on issues, the workflow should route to a dedicated implementation agent instead of the built-in `build` agent.
+- Issue implementation runs must create or update a dedicated non-default branch, commit the resulting changes there, and open or update a pull request back to the default branch when code changes are required.
+- Pull requests opened from issue automation must include a concrete PR description summarizing the implementation, validation, and linked issue.
 - On opened or updated PRs, the workflow should route to code review.
-- On `/oc` comments in PR threads or review comments, the workflow should route to implementation work on the PR branch when possible.
+- On PR synchronize events, review should focus first on the newly pushed commits or incremental diff before expanding to the full PR context when needed.
+- On `/oc` comments in PR threads or review comments, the workflow should route to implementation work on the PR branch when possible, commit the resulting changes on that PR branch, and rely on the follow-up PR review run to review the new commits.
+- If a `/oc` implementation request targets a fork PR without branch write permission, automation must explain the limitation clearly and provide a concrete patch or next step instead of blocking.
 - When a decision is needed during automation, choose the safest reasonable default and continue.
 - The workflow must load the root `opencode.json` plus the `.opencode/` agents, commands, skills, and instruction files.
 

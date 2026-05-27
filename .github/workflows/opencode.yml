@@ -42,6 +42,18 @@ jobs:
             const hasCommand = /(^|\s)\/(oc|opencode)\b/i.test(commentBody);
             const sameRepoFullName = `${context.repo.owner}/${context.repo.repo}`;
 
+            function slugify(value) {
+              return String(value || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .slice(0, 40) || 'work';
+            }
+
+            function issueBranch(issueNumber, title) {
+              return `automation/issue-${issueNumber}-${slugify(title)}`;
+            }
+
             const outputs = {
               should_run: 'false',
               run_kind: '',
@@ -55,11 +67,13 @@ jobs:
               base_ref: '',
               head_ref: '',
               head_sha: '',
+              previous_head_sha: '',
               checkout_repository: sameRepoFullName,
               checkout_ref: defaultBranch,
               is_pr_context: 'false',
               head_repo_full_name: '',
               same_repo_pr: 'false',
+              working_branch: '',
             };
 
             async function loadPr(prNumber) {
@@ -94,6 +108,7 @@ jobs:
                 outputs.base_ref = pr.base?.ref || defaultBranch;
                 outputs.head_ref = pr.head?.ref || '';
                 outputs.head_sha = pr.head?.sha || '';
+                outputs.previous_head_sha = payload.before || '';
                 outputs.checkout_repository = pr.head?.repo?.full_name || sameRepoFullName;
                 outputs.head_repo_full_name = pr.head?.repo?.full_name || '';
                 outputs.same_repo_pr = String((pr.head?.repo?.full_name || sameRepoFullName) === sameRepoFullName);
@@ -104,10 +119,11 @@ jobs:
               if (issue && !issue.pull_request) {
                 outputs.should_run = 'true';
                 outputs.run_kind = 'issue_open';
-                outputs.agent = 'build';
+                outputs.agent = 'implementer';
                 outputs.issue_number = String(issue.number);
                 outputs.title = issue.title || '';
                 outputs.body = issue.body || '';
+                outputs.working_branch = issueBranch(issue.number, issue.title);
               }
             } else if (eventName === 'issue_comment' && hasCommand) {
               const issue = payload.issue;
@@ -115,14 +131,15 @@ jobs:
                 await loadPr(issue.number);
                 outputs.should_run = 'true';
                 outputs.run_kind = 'pr_comment_implement';
-                outputs.agent = 'build';
+                outputs.agent = 'implementer';
               } else if (issue) {
                 outputs.should_run = 'true';
                 outputs.run_kind = 'issue_comment_implement';
-                outputs.agent = 'build';
+                outputs.agent = 'implementer';
                 outputs.issue_number = String(issue.number);
                 outputs.title = issue.title || '';
                 outputs.body = issue.body || '';
+                outputs.working_branch = issueBranch(issue.number, issue.title);
               }
             } else if (eventName === 'pull_request_review_comment' && hasCommand) {
               const prNumber = payload.pull_request?.number;
@@ -130,7 +147,7 @@ jobs:
                 await loadPr(prNumber);
                 outputs.should_run = 'true';
                 outputs.run_kind = 'pr_review_comment_implement';
-                outputs.agent = 'build';
+                outputs.agent = 'implementer';
               }
             }
 
@@ -161,9 +178,11 @@ jobs:
           ISSUE_NUMBER: ${{ steps.route.outputs.issue_number }}
           PR_NUMBER: ${{ steps.route.outputs.pr_number }}
           DEFAULT_BRANCH: ${{ steps.route.outputs.default_branch }}
+          WORKING_BRANCH: ${{ steps.route.outputs.working_branch }}
           BASE_REF: ${{ steps.route.outputs.base_ref }}
           HEAD_REF: ${{ steps.route.outputs.head_ref }}
           HEAD_SHA: ${{ steps.route.outputs.head_sha }}
+          PREVIOUS_HEAD_SHA: ${{ steps.route.outputs.previous_head_sha }}
           TITLE: ${{ steps.route.outputs.title }}
           BODY: ${{ steps.route.outputs.body }}
           COMMENT_BODY: ${{ steps.route.outputs.comment_body }}
@@ -181,9 +200,11 @@ jobs:
           issue_number = os.environ.get('ISSUE_NUMBER', '')
           pr_number = os.environ.get('PR_NUMBER', '')
           default_branch = os.environ.get('DEFAULT_BRANCH', '')
+          working_branch = os.environ.get('WORKING_BRANCH', '')
           base_ref = os.environ.get('BASE_REF', '')
           head_ref = os.environ.get('HEAD_REF', '')
           head_sha = os.environ.get('HEAD_SHA', '')
+          previous_head_sha = os.environ.get('PREVIOUS_HEAD_SHA', '')
           title = os.environ.get('TITLE', '')
           body = os.environ.get('BODY', '')
           comment_body = os.environ.get('COMMENT_BODY', '')
@@ -193,6 +214,18 @@ jobs:
           def block(*lines):
               return "\n".join(lines).rstrip() + "\n"
 
+          def review_context_lines():
+              lines = []
+              if previous_head_sha:
+                  lines.extend([
+                      'This run was triggered by newly pushed commits on an existing PR. Review the incremental range first before broadening scope.',
+                      f'Previous PR head SHA: {previous_head_sha}',
+                      f'Incremental commit range: {previous_head_sha}..{head_sha}',
+                      f'Incremental diff command: git --no-pager diff {previous_head_sha}..{head_sha}',
+                      '',
+                  ])
+              return lines
+
           prompts = {
               'pr_review': block(
                   'You are running inside a non-interactive GitHub Actions pull-request review workflow.',
@@ -201,6 +234,7 @@ jobs:
                   'Review the code on the checked-out PR branch and leave high-signal review feedback only.',
                   'Do not modify repository files during this run.',
                   f'In detached CI checkouts, do not assume a local main branch exists. Prefer git diff origin/{base_ref}...HEAD when you need the branch diff.',
+                  *review_context_lines(),
                   'If there are no significant issues, output exactly: No significant issues found in the reviewed changes.',
                   '',
                   f'Repository: {repository}',
@@ -219,12 +253,14 @@ jobs:
                   'You are running inside a non-interactive GitHub Actions issue implementation workflow.',
                   'Never ask the user, reporter, client, or workflow operator for clarification, approval, or permission.',
                   'Treat the issue as an implementation request: write code, build the requested feature or app, run relevant validation, and report the outcome.',
-                  f'Do not commit directly to the default branch {default_branch}. Create or update a dedicated working branch for issue #{issue_number} and open or update a pull request back to {default_branch} when code changes are required.',
+                  f'Do not commit directly to the default branch {default_branch}. Create or update the dedicated working branch {working_branch} from {default_branch}, commit the resulting changes there, and open or update a pull request back to {default_branch} when code changes are required.',
+                  'The pull request must come from that non-default working branch and must include a concrete description with summary, validation, and linked issue context.',
                   'Use the issue title and body as the source of truth. If something is ambiguous, choose the safest reasonable interpretation and continue.',
                   '',
                   f'Repository: {repository}',
                   f'Issue: #{issue_number}',
                   f'Default branch: {default_branch}',
+                  f'Working branch: {working_branch}',
                   '',
                   'Issue title:',
                   title,
@@ -236,12 +272,14 @@ jobs:
                   'You are running inside a non-interactive GitHub Actions issue-comment implementation workflow.',
                   'Never ask the user, reporter, client, or workflow operator for clarification, approval, or permission.',
                   'Treat the /oc comment as a request to implement the described change, not just to explain it.',
-                  f'Do not commit directly to the default branch {default_branch}. Create or update a dedicated working branch for issue #{issue_number} and open or update a pull request back to {default_branch} when code changes are required.',
+                  f'Do not commit directly to the default branch {default_branch}. Create or update the dedicated working branch {working_branch} from {default_branch}, commit the resulting changes there, and open or update a pull request back to {default_branch} when code changes are required.',
+                  'The pull request must come from that non-default working branch and must include a concrete description with summary, validation, and linked issue context.',
                   'Use the original issue plus the trigger comment together as the specification. If there is conflict, the trigger comment takes priority.',
                   '',
                   f'Repository: {repository}',
                   f'Issue: #{issue_number}',
                   f'Default branch: {default_branch}',
+                  f'Working branch: {working_branch}',
                   '',
                   'Issue title:',
                   title,
@@ -256,14 +294,15 @@ jobs:
                   'You are running inside a non-interactive GitHub Actions pull-request comment implementation workflow.',
                   'Never ask the user, PR author, client, or workflow operator for clarification, approval, or permission.',
                   'Treat the /oc comment as a request to implement the described changes directly on the current pull-request branch.',
-                  f'Work on the checked-out PR head branch {head_ref}. Use the trigger comment as the highest-priority instruction, with the PR title and body as supporting context.',
-                  'Run relevant validation before finishing. If this PR comes from a fork and write access is unavailable, explain the limitation clearly and provide the concrete patch or next step instead of blocking.',
+                  f'Work on the checked-out PR head branch {head_ref}. Commit the requested changes directly on that PR branch when write access exists, run relevant validation, and inspect the exact new commits or diff you introduced before finishing.',
+                  'After a successful push, the follow-up pull_request synchronize run will review the new commits. Keep the implementation commit focused and reviewable.',
+                  'If this PR comes from a fork and write access is unavailable, explain the limitation clearly and provide the concrete patch or next step instead of blocking.',
                   '',
                   f'Repository: {repository}',
                   f'Pull request: #{pr_number}',
                   f'Base branch: {base_ref}',
                   f'Head branch: {head_ref}',
-                  f'Head SHA: {head_sha}',
+                  f'Head SHA at start: {head_sha}',
                   f'Head repository: {head_repo_full_name}',
                   f'Same-repo PR: {same_repo_pr}',
                   '',
@@ -280,14 +319,15 @@ jobs:
                   'You are running inside a non-interactive GitHub Actions pull-request review-comment implementation workflow.',
                   'Never ask the user, PR author, client, or workflow operator for clarification, approval, or permission.',
                   'Treat the /oc inline review comment as a request to implement the described change directly on the current pull-request branch.',
-                  f'Work on the checked-out PR head branch {head_ref}. Use the review comment as the highest-priority instruction, with the PR title and body as supporting context.',
-                  'Run relevant validation before finishing. If this PR comes from a fork and write access is unavailable, explain the limitation clearly and provide the concrete patch or next step instead of blocking.',
+                  f'Work on the checked-out PR head branch {head_ref}. Commit the requested changes directly on that PR branch when write access exists, run relevant validation, and inspect the exact new commits or diff you introduced before finishing.',
+                  'After a successful push, the follow-up pull_request synchronize run will review the new commits. Keep the implementation commit focused and reviewable.',
+                  'If this PR comes from a fork and write access is unavailable, explain the limitation clearly and provide the concrete patch or next step instead of blocking.',
                   '',
                   f'Repository: {repository}',
                   f'Pull request: #{pr_number}',
                   f'Base branch: {base_ref}',
                   f'Head branch: {head_ref}',
-                  f'Head SHA: {head_sha}',
+                  f'Head SHA at start: {head_sha}',
                   f'Head repository: {head_repo_full_name}',
                   f'Same-repo PR: {same_repo_pr}',
                   '',
