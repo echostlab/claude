@@ -39,14 +39,11 @@
       "npm": "@ai-sdk/openai",
       "name": "Azure AI Foundry",
       "env": [
-        "AZURE_FOUNDRY_API_KEY1"
+        "AZURE_OPENAI_API_KEY1"
       ],
       "options": {
-        "baseURL": "https://opens6505134568.openai.azure.com/openai/v1",
-        "apiKey": "{env:AZURE_FOUNDRY_API_KEY1}",
-        "headers": {
-          "api-key": "{env:AZURE_FOUNDRY_API_KEY1}"
-        }
+        "apiKey": "{env:AZURE_OPENAI_API_KEY1}",
+        "baseURL": "https://opens6505134568.openai.azure.com/openai/v1/"
       },
       "models": {
         "gpt-5.4": {
