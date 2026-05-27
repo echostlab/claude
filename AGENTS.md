@@ -21,8 +21,11 @@ Core defaults:
 - treat this file as the bootstrap and keep substantive rules in `.opencode/instructions/`
 
 Automation rule:
-- GitHub Actions reviews are non-interactive.
-- Agents, prompts, instructions, and workflow config must not ask the PR author or user for clarification, approval, or permission during CI runs.
+- GitHub Actions issue implementation runs and PR review runs are non-interactive.
+- Agents, prompts, instructions, and workflow config must not ask the PR author, issue author, or user for clarification, approval, or permission during CI runs.
+- On opened issues and `/oc` comments on issues, the workflow should route to implementation work.
+- On opened or updated PRs, the workflow should route to code review.
+- On `/oc` comments in PR threads or review comments, the workflow should route to implementation work on the PR branch when possible.
 - When a decision is needed during automation, choose the safest reasonable default and continue.
 - The workflow must load the root `opencode.json` plus the `.opencode/` agents, commands, skills, and instruction files.
 

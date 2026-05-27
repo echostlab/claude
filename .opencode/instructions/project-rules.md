@@ -47,8 +47,11 @@ Additional runtime instructions are loaded through `opencode.json.instructions`:
 
 ## Automation rules
 
-- GitHub Actions review runs are unattended. Do not ask the PR author, user, or client for clarification, approval, or permission.
-- Use direct `allow` permissions for the tools required by CI review flows.
+- GitHub Actions issue implementation runs and PR review runs are unattended. Do not ask the PR author, issue author, user, or client for clarification, approval, or permission.
+- Route opened issues and `/oc` issue comments to implementation work.
+- Route opened or updated PRs to code review.
+- Route `/oc` comments on PR threads or PR review comments to implementation work on the PR branch when possible.
+- Use direct `allow` permissions for the tools required by CI automation flows.
 - When ambiguity remains during automation, make the safest reasonable assumption, state it if needed, and continue.
 - Use high-signal review output only: bugs, regressions, security issues, broken assumptions, concrete missing coverage, or other material risks.
 - Do not produce style-only or speculative code review noise.

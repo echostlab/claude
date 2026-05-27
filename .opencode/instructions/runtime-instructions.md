@@ -37,11 +37,14 @@ Project-local OpenCode assets under `.opencode/`:
 - `context7` is enabled by default for documentation lookup.
 - `github` is enabled and expects `GITHUB_TOKEN` to be present in the runtime environment.
 
-## GitHub Actions review behavior
+## GitHub Actions automation behavior
 
 - The GitHub Actions workflow must load the repository-root `opencode.json`.
 - The workflow must also use the checked-in `.opencode/` agents, commands, skills, and instructions.
-- Reviews are non-interactive: never block waiting for clarification from a human during CI execution.
+- Automation is non-interactive: never block waiting for clarification from a human during CI execution.
+- Opened issues and `/oc` issue comments should route to implementation work.
+- Opened or updated PRs should route to code review.
+- `/oc` comments on PR threads or review comments should route to implementation work on the PR branch when possible.
 - Prefer concise, high-confidence review comments over speculative feedback.
 
 ## Editing rule
