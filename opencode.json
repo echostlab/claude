@@ -9,7 +9,8 @@
     ".opencode/instructions/customization-surfaces.md"
   ],
   "permission": {
-    "*": "ask",
+    "*": "allow",
+    "question": "deny",
     "read": "allow",
     "glob": "allow",
     "grep": "allow",
@@ -21,16 +22,15 @@
     "webfetch": "allow",
     "websearch": "allow",
     "task": "allow",
-    "question": "allow",
     "todowrite": "allow",
     "repo_overview": "allow",
-    "repo_clone": "ask",
-    "external_directory": "ask",
-    "edit": "ask",
+    "repo_clone": "allow",
+    "external_directory": "allow",
+    "edit": "allow",
     "context7_*": "allow",
-    "github_*": "ask",
+    "github_*": "allow",
     "bash": {
-      "*": "ask",
+      "*": "allow",
       "rm -rf *": "deny"
     }
   },
@@ -92,7 +92,7 @@
         "-y",
         "@modelcontextprotocol/server-github"
       ],
-      "enabled": false,
+      "enabled": true,
       "timeout": 30000,
       "environment": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_TOKEN}"

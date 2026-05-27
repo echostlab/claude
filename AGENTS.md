@@ -1,8 +1,8 @@
 # OpenCode workspace bootstrap
 
-OpenCode's rules documentation requires `AGENTS.md` in the project root for automatic project-rule loading.
+OpenCode requires `AGENTS.md` at the project root for automatic project-rule loading.
 
-This repository keeps most checked-in instruction markdown under `.opencode/instructions/` and loads those files through `opencode.json.instructions`.
+This repository keeps the detailed runtime guidance under `.opencode/instructions/` and loads those files through `opencode.json.instructions`.
 
 Active instruction files:
 - `.opencode/instructions/project-rules.md`
@@ -17,6 +17,13 @@ Core defaults:
 - model: `azure-foundry/gpt-5.4`
 - keep credentials in environment variables only
 - keep active agents, commands, and skills under `.opencode/`
-- treat this file as the root bootstrap and keep detailed guidance in `.opencode/instructions/`
+- use the repository-root `opencode.json` as the checked-in config entrypoint
+- treat this file as the bootstrap and keep substantive rules in `.opencode/instructions/`
+
+Automation rule:
+- GitHub Actions reviews are non-interactive.
+- Agents, prompts, instructions, and workflow config must not ask the PR author or user for clarification, approval, or permission during CI runs.
+- When a decision is needed during automation, choose the safest reasonable default and continue.
+- The workflow must load the root `opencode.json` plus the `.opencode/` agents, commands, skills, and instruction files.
 
 If any instruction path changes, update `opencode.json.instructions` so the `.opencode/instructions/*.md` files continue to load.

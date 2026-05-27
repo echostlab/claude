@@ -19,7 +19,8 @@ Active project-local OpenCode assets under `.opencode/`:
 - Default model: `azure-foundry/gpt-5.4`
 - Default agent: `build`
 - Built-in `build`, `plan`, `general`, `explore`, and `scout` are all pinned to `azure-foundry/gpt-5.4`
-- Custom migrated agents and commands are also pinned to `azure-foundry/gpt-5.4`
+- Custom agents and commands are also pinned to `azure-foundry/gpt-5.4`
+- GitHub review automation must use the root `opencode.json` plus the `.opencode/` customization surfaces
 
 ## Azure AI Foundry provider config
 
@@ -37,12 +38,20 @@ If your deployment endpoint differs, set `AZURE_FOUNDRY_BASE_URL` to the exact c
 ## MCP servers configured in opencode.json
 
 - `context7` — enabled by default via `npx -y @upstash/context7-mcp`
-- `github` — configured but disabled by default until `GITHUB_TOKEN` is available
+- `github` — enabled and authenticated from `GITHUB_TOKEN` via `GITHUB_PERSONAL_ACCESS_TOKEN`
 
 Additional runtime instructions are loaded through `opencode.json.instructions`:
 - `.opencode/instructions/project-rules.md`
 - `.opencode/instructions/runtime-instructions.md`
 - `.opencode/instructions/customization-surfaces.md`
+
+## Automation rules
+
+- GitHub Actions review runs are unattended. Do not ask the PR author, user, or client for clarification, approval, or permission.
+- Use direct `allow` permissions for the tools required by CI review flows.
+- When ambiguity remains during automation, make the safest reasonable assumption, state it if needed, and continue.
+- Use high-signal review output only: bugs, regressions, security issues, broken assumptions, concrete missing coverage, or other material risks.
+- Do not produce style-only or speculative code review noise.
 
 ## Migration rules
 
@@ -65,7 +74,7 @@ If that data is missing, the agent should say so explicitly instead of pretendin
 
 ## Schema note
 
-The repository keeps a custom provider alias named `azure-foundry` in `provider.azure-foundry`, but the active checked-in default model is `azure-foundry/gpt-5.4` because that is accepted by the current published OpenCode schema. If you prefer selecting the custom alias interactively after startup, use `/models` once the Azure Foundry environment variables are set.
+The repository keeps a custom provider alias named `azure-foundry` in `provider.azure-foundry`, and the active checked-in default model is `azure-foundry/gpt-5.4` because that is accepted by the current published OpenCode schema.
 
 ## Customization references
 

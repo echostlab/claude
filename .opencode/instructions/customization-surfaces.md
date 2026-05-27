@@ -27,7 +27,7 @@ The current OpenCode docs also say:
 - per-project config lives in `opencode.json` at the project root
 - project rules live in `AGENTS.md` at the project root
 
-Those two files stay at the root because OpenCode looks for them there automatically. In this repository, they act as the required root entrypoints while most additional instruction markdown now lives under `.opencode/`.
+Those two files stay at the root because OpenCode looks for them there automatically. In this repository, they act as the required root entrypoints while most additional instruction markdown lives under `.opencode/`.
 
 ## Canonical local file locations
 
@@ -45,7 +45,7 @@ Those two files stay at the root because OpenCode looks for them there automatic
   - frontmatter + markdown body prompt
 - `.opencode/commands/*.md`
   - reusable slash commands
-  - this is the canonical OpenCode replacement for legacy prompt files
+  - canonical OpenCode replacement for legacy prompt files
 - `.opencode/skills/<name>/SKILL.md`
   - reusable procedural skills
 - `.opencode/instructions/*.md`
@@ -118,6 +118,13 @@ This workspace uses inline agent config for built-in agents and markdown files u
 
 This workspace keeps custom commands in `.opencode/commands/*.md`, which OpenCode loads and merges into the effective command config.
 
+## GitHub Actions wiring
+
+- GitHub Actions must run from the repository root so OpenCode can load `opencode.json` automatically.
+- The workflow should explicitly point `OPENCODE_CONFIG` at the root `opencode.json` when reproducibility matters.
+- The `.opencode/` directory must remain checked out so OpenCode can discover agents, commands, skills, and referenced instruction markdown.
+- Non-interactive review workflows must deny `question` and rely on direct `allow` permissions for the tools they need.
+
 ## Authoring rules for this repository
 
 - Keep `azure-foundry/gpt-5.4` consistent across the workspace unless the user explicitly requests another model.
@@ -125,6 +132,7 @@ This workspace keeps custom commands in `.opencode/commands/*.md`, which OpenCod
 - Prefer `permission` over deprecated `tools` booleans.
 - Keep agent and command descriptions short and discovery-friendly.
 - Keep skills in lowercase hyphenated directories whose names match the `name` frontmatter field.
+- Review agents used in CI must assume unattended execution and must not ask for human approval.
 
 ## Discovery checklist
 
@@ -134,4 +142,5 @@ When something does not load in OpenCode, verify:
 - markdown frontmatter is valid YAML
 - `opencode.json` remains valid JSON
 - any `instructions` path actually exists
-- any custom provider or MCP dependency has its required environment variables
+- the workflow runs from the repository root or sets `OPENCODE_CONFIG` correctly
+- required environment variables for providers and MCP servers are present
