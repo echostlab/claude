@@ -232,29 +232,11 @@ jobs:
             echo "$DELIM"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Export vars & Set Azure
-        if: steps.check.outputs.should_run == 'true'
-        id: config
-        shell: bash
-        run: |
-          CURRENT_DIR="$(pwd)"
-          CONFIG_FILE="$CURRENT_DIR/.opencode/opencode.json"
-
-          if [ ! -f "$CONFIG_FILE" ]; then
-             echo "Config file not found: $CONFIG_FILE"
-             exit 1
-          fi
-          
-          echo "opencode_config=$CONFIG_FILE" >> "$GITHUB_OUTPUT"
-          echo "opencode_config_dir=$CURRENT_DIR/.opencode" >> "$GITHUB_OUTPUT"
-    
       - name: Run OpenCode Review
         if: steps.check.outputs.should_run == 'true'
         uses: sst/opencode/github@latest
         env:
           AZURE_OPENAI_API_KEY1: ${{ secrets.AZURE_OPENAI_API_KEY1 }}
-          OPENCODE_CONFIG: ${{ steps.config.outputs.opencode_config }}
-          OPENCODE_CONFIG_DIR: ${{ steps.config.outputs.opencode_config_dir }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AZURE_RESOURCE_NAME: "opens6505134568"
         with:
