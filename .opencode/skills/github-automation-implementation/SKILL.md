@@ -6,6 +6,7 @@ compatibility: opencode
 Use this skill when editing the repository's OpenCode GitHub automation for issues, pull requests, and `/oc` comments.
 
 ## Goals
+- Run GitHub Actions automation by installing Node.js, Bun, ripgrep, and the OpenCode CLI, then invoking `opencode run` directly instead of the hosted GitHub Action wrapper.
 - Route issue implementation to a dedicated `implementer` agent instead of the built-in `build` agent.
 - Ensure opened issues and `/oc` issue comments create or reuse a dedicated non-default branch.
 - Require implementation runs to commit the resulting changes and open or update a pull request back to the default branch when code changes are required.
@@ -46,3 +47,12 @@ For PR review prompts:
 - `.opencode/agents/*.md`
 - `.opencode/commands/*.md`
 - `.github/workflows/opencode.yml`
+
+## Workflow runtime requirements
+When editing `.github/workflows/opencode.yml` for this repository:
+1. Set up Node.js before running OpenCode.
+2. Set up Bun before running OpenCode.
+3. Install `ripgrep` in the runner image.
+4. Install the OpenCode CLI in the runner and put its bin directory on `PATH`.
+5. Invoke `opencode run --model ... --agent ...` directly with the generated prompt.
+6. Keep `OPENCODE_CONFIG` pointed at the repository-root `opencode.json`.

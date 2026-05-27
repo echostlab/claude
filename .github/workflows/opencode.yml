@@ -168,6 +168,47 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Set up Node.js
+        if: steps.route.outputs.should_run == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Bun
+        if: steps.route.outputs.should_run == 'true'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install runtime dependencies
+        if: steps.route.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ripgrep
+          curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
+          echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+
+      - name: Verify OpenCode toolchain
+        if: steps.route.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.opencode/bin:$PATH"
+          node --version
+          bun --version
+          rg --version
+          opencode --version
+
+      - name: Configure git author
+        if: steps.route.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'opencode-agent[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
       - name: Compose OpenCode prompt
         if: steps.route.outputs.should_run == 'true'
         id: prompt
@@ -229,6 +270,7 @@ jobs:
           prompts = {
               'pr_review': block(
                   'You are running inside a non-interactive GitHub Actions pull-request review workflow.',
+                  'This workflow installed Node.js, Bun, ripgrep, and the OpenCode CLI, then invoked `opencode run` directly from the repository root.',
                   'Never ask the user, PR author, client, or workflow operator for clarification, approval, or permission.',
                   'Use the checked-in OpenCode configuration from the repository-root opencode.json plus the agents, commands, skills, and instructions under .opencode/.',
                   'Review the code on the checked-out PR branch and leave high-signal review feedback only.',
@@ -251,6 +293,7 @@ jobs:
               ),
               'issue_open': block(
                   'You are running inside a non-interactive GitHub Actions issue implementation workflow.',
+                  'This workflow installed Node.js, Bun, ripgrep, and the OpenCode CLI, then invoked `opencode run` directly from the repository root.',
                   'Never ask the user, reporter, client, or workflow operator for clarification, approval, or permission.',
                   'Treat the issue as an implementation request: write code, build the requested feature or app, run relevant validation, and report the outcome.',
                   f'Do not commit directly to the default branch {default_branch}. Create or update the dedicated working branch {working_branch} from {default_branch}, commit the resulting changes there, and open or update a pull request back to {default_branch} when code changes are required.',
@@ -270,6 +313,7 @@ jobs:
               ),
               'issue_comment_implement': block(
                   'You are running inside a non-interactive GitHub Actions issue-comment implementation workflow.',
+                  'This workflow installed Node.js, Bun, ripgrep, and the OpenCode CLI, then invoked `opencode run` directly from the repository root.',
                   'Never ask the user, reporter, client, or workflow operator for clarification, approval, or permission.',
                   'Treat the /oc comment as a request to implement the described change, not just to explain it.',
                   f'Do not commit directly to the default branch {default_branch}. Create or update the dedicated working branch {working_branch} from {default_branch}, commit the resulting changes there, and open or update a pull request back to {default_branch} when code changes are required.',
@@ -292,6 +336,7 @@ jobs:
               ),
               'pr_comment_implement': block(
                   'You are running inside a non-interactive GitHub Actions pull-request comment implementation workflow.',
+                  'This workflow installed Node.js, Bun, ripgrep, and the OpenCode CLI, then invoked `opencode run` directly from the repository root.',
                   'Never ask the user, PR author, client, or workflow operator for clarification, approval, or permission.',
                   'Treat the /oc comment as a request to implement the described changes directly on the current pull-request branch.',
                   f'Work on the checked-out PR head branch {head_ref}. Commit the requested changes directly on that PR branch when write access exists, run relevant validation, and inspect the exact new commits or diff you introduced before finishing.',
@@ -317,6 +362,7 @@ jobs:
               ),
               'pr_review_comment_implement': block(
                   'You are running inside a non-interactive GitHub Actions pull-request review-comment implementation workflow.',
+                  'This workflow installed Node.js, Bun, ripgrep, and the OpenCode CLI, then invoked `opencode run` directly from the repository root.',
                   'Never ask the user, PR author, client, or workflow operator for clarification, approval, or permission.',
                   'Treat the /oc inline review comment as a request to implement the described change directly on the current pull-request branch.',
                   f'Work on the checked-out PR head branch {head_ref}. Commit the requested changes directly on that PR branch when write access exists, run relevant validation, and inspect the exact new commits or diff you introduced before finishing.',
@@ -352,7 +398,7 @@ jobs:
 
       - name: Run OpenCode automation
         if: steps.route.outputs.should_run == 'true'
-        uses: anomalyco/opencode/github@latest
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -360,9 +406,16 @@ jobs:
           OPENCODE_CONFIG: ${{ github.workspace }}/opencode.json
           OPENCODE_PERMISSION: >-
             {"*":"allow","question":"deny","read":"allow","glob":"allow","grep":"allow","list":"allow","lsp":"allow","skill":{"*":"allow"},"webfetch":"allow","websearch":"allow","task":"allow","todowrite":"allow","repo_overview":"allow","repo_clone":"allow","external_directory":"allow","edit":"allow","github_*":"allow","context7_*":"allow","bash":{"*":"allow","rm -rf *":"deny"}}
-        with:
-          model: azure-foundry/gpt-5.4
-          agent: ${{ steps.route.outputs.agent }}
-          share: false
-          use_github_token: true
-          prompt: ${{ steps.prompt.outputs.prompt }}
+          OPENCODE_PROMPT: ${{ steps.prompt.outputs.prompt }}
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.opencode/bin:$PATH"
+
+          prompt_file="$RUNNER_TEMP/opencode-prompt.txt"
+          printf '%s\n' "$OPENCODE_PROMPT" > "$prompt_file"
+
+          opencode run \
+            --model azure-foundry/gpt-5.4 \
+            --agent "${{ steps.route.outputs.agent }}" \
+            --print-logs \
+            "$(cat "$prompt_file")"

@@ -30,6 +30,8 @@ Automation rule:
 - On PR synchronize events, review should focus first on the newly pushed commits or incremental diff before expanding to the full PR context when needed.
 - On `/oc` comments in PR threads or review comments, the workflow should route to implementation work on the PR branch when possible, commit the resulting changes on that PR branch, and rely on the follow-up PR review run to review the new commits.
 - If a `/oc` implementation request targets a fork PR without branch write permission, automation must explain the limitation clearly and provide a concrete patch or next step instead of blocking.
+- The GitHub Actions workflow must install Node.js, Bun, ripgrep, and the OpenCode CLI before execution, then invoke `opencode run` directly instead of `uses: anomalyco/opencode/github@latest`.
+- The automation prompt and agent instructions must assume this direct CLI execution path and the installed toolchain.
 - When a decision is needed during automation, choose the safest reasonable default and continue.
 - The workflow must load the root `opencode.json` plus the `.opencode/` agents, commands, skills, and instruction files.
 

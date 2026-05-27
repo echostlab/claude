@@ -22,6 +22,7 @@ Active project-local OpenCode assets under `.opencode/`:
 - The dedicated automation agents `implementer` and `reviewer` are pinned to `azure-foundry/gpt-5.4`
 - Custom agents and commands are also pinned to `azure-foundry/gpt-5.4`
 - GitHub review automation must use the root `opencode.json` plus the `.opencode/` customization surfaces
+- GitHub automation runs install Node.js, Bun, ripgrep, and the OpenCode CLI, then execute `opencode run` directly from the repository root
 
 ## Azure AI Foundry provider config
 
@@ -56,6 +57,7 @@ Additional runtime instructions are loaded through `opencode.json.instructions`:
 - On PR synchronize events, code review should focus first on the newly pushed commits or incremental diff before falling back to the full PR diff.
 - Route `/oc` comments on PR threads or PR review comments to implementation work on the PR branch when possible, and commit the resulting changes on that branch.
 - If a `/oc` implementation request targets a fork PR without write access to the branch, explain the limitation clearly and provide a concrete patch or next step instead of blocking.
+- The workflow should not rely on `uses: anomalyco/opencode/github@latest`; it should prepare the toolchain and call `opencode run` directly with the routed agent and generated prompt.
 - Use direct `allow` permissions for the tools required by CI automation flows.
 - When ambiguity remains during automation, make the safest reasonable assumption, state it if needed, and continue.
 - Use high-signal review output only: bugs, regressions, security issues, broken assumptions, concrete missing coverage, or other material risks.

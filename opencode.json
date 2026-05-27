@@ -104,6 +104,10 @@
       "mode": "primary",
       "model": "azure-foundry/gpt-5.4"
     },
+    "reviewer": {
+      "mode": "primary",
+      "model": "azure-foundry/gpt-5.4"
+    },
     "plan": {
       "mode": "primary",
       "temperature": 0.1,

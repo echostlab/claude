@@ -41,6 +41,7 @@ Project-local OpenCode assets under `.opencode/`:
 
 - The GitHub Actions workflow must load the repository-root `opencode.json`.
 - The workflow must also use the checked-in `.opencode/` agents, commands, skills, and instructions.
+- The workflow must install Node.js, Bun, ripgrep, and the OpenCode CLI before execution, and then run `opencode run` directly from the repository root.
 - Automation is non-interactive: never block waiting for clarification from a human during CI execution.
 - Opened issues and `/oc` issue comments should route to the dedicated `implementer` agent.
 - Issue implementation must create or update a dedicated non-default branch, commit the resulting changes there, and open or update a pull request back to the default branch when code changes are required.

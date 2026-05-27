@@ -123,6 +123,7 @@ This workspace keeps custom commands in `.opencode/commands/*.md`, which OpenCod
 - GitHub Actions must run from the repository root so OpenCode can load `opencode.json` automatically.
 - The workflow should explicitly point `OPENCODE_CONFIG` at the root `opencode.json` when reproducibility matters.
 - The `.opencode/` directory must remain checked out so OpenCode can discover agents, commands, skills, and referenced instruction markdown.
+- GitHub Actions automation in this repository installs Node.js, Bun, ripgrep, and the OpenCode CLI first, then invokes `opencode run` directly instead of relying on `uses: anomalyco/opencode/github@latest`.
 - Non-interactive review workflows must deny `question` and rely on direct `allow` permissions for the tools they need.
 - Keep a dedicated implementation agent under `.opencode/agents/` for unattended issue and `/oc` implementation runs instead of relying on the built-in `build` agent when deterministic automation behavior matters.
 - Prefer a canonical issue branch naming rule such as `automation/issue-<number>-<slug>` so issue-open and issue-comment runs converge on the same working branch.
