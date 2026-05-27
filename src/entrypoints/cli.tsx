@@ -1,5 +1,17 @@
 import { feature } from 'bun:bundle';
 
+if (typeof globalThis.MACRO === 'undefined') {
+  globalThis.MACRO = {
+    VERSION: process.env.npm_package_version ?? '1.0.0',
+    BUILD_TIME: '',
+    PACKAGE_URL: 'claude-code',
+    NATIVE_PACKAGE_URL: 'claude-code',
+    FEEDBACK_CHANNEL: 'support',
+    ISSUES_EXPLAINER: 'report the issue to the maintainer',
+    VERSION_CHANGELOG: ''
+  };
+}
+
 // Bugfix for corepack auto-pinning, which adds yarnpkg to peoples' package.jsons
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
 process.env.COREPACK_ENABLE_AUTO_PIN = '0';

@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "bun build ./src/entrypoints/build.ts --target bun --outfile ./dist/main.js",
+    "smoke:version": "bun run ./dist/main.js --version"
+  },
   "dependencies": {
     "@alcalzone/ansi-tokenize": "*",
     "@ant/claude-for-chrome-mcp": "file:packages/ant-claude-for-chrome-mcp",
